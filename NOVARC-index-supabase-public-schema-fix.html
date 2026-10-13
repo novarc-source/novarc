@@ -1,0 +1,1761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOVARC — AI Automation, Marketing & Creative Studio</title>
+<meta name="description" content="NOVARC is a technology and creative agency building AI automation, digital marketing, and photo & video content for modern brands.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+<style>
+:root{
+  --bg: #05070d;
+  --bg-2: #080b16;
+  --panel: rgba(255,255,255,0.035);
+  --panel-border: rgba(255,255,255,0.08);
+  --blue: #3ea3ff;
+  --blue-2: #1fd0ff;
+  --purple: #9457ff;
+  --purple-2: #6b3bff;
+  --text: #eef1f8;
+  --muted: #8b93a8;
+  --muted-2: #5a627a;
+  --radius: 18px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  overflow-x:hidden;
+  cursor:default;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--purple-2);color:#fff;}
+::-webkit-scrollbar{width:8px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:linear-gradient(var(--blue),var(--purple));border-radius:10px;}
+
+h1,h2,h3,h4,.font-display{font-family:'Space Grotesk',sans-serif;letter-spacing:-0.02em;}
+.mono{font-family:'JetBrains Mono',monospace;}
+
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+
+.wrap{max-width:1280px;margin:0 auto;padding:0 32px;}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px;letter-spacing:0.18em;text-transform:uppercase;
+  color:var(--blue-2);
+  margin-bottom:18px;
+}
+.eyebrow::before{content:'';width:20px;height:1px;background:linear-gradient(90deg,var(--blue-2),transparent);}
+
+/* background wash */
+.bg-wash{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 900px 600px at 15% -5%, rgba(62,163,255,0.16), transparent 60%),
+    radial-gradient(ellipse 900px 700px at 100% 20%, rgba(148,87,255,0.14), transparent 55%),
+    radial-gradient(ellipse 800px 600px at 20% 90%, rgba(31,208,255,0.08), transparent 60%),
+    var(--bg);
+}
+.noise{
+  position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0.035;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* glass */
+.glass{
+  background:var(--panel);
+  border:1px solid var(--panel-border);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+/* custom cursor */
+.cursor-dot{
+  position:fixed;top:0;left:0;width:8px;height:8px;border-radius:50%;
+  background:var(--blue-2);pointer-events:none;z-index:9999;
+  transform:translate(-50%,-50%);
+  transition:opacity .2s;
+  box-shadow:0 0 12px 2px rgba(31,208,255,0.7);
+}
+.cursor-ring{
+  position:fixed;top:0;left:0;width:34px;height:34px;border-radius:50%;
+  border:1px solid rgba(255,255,255,0.35);pointer-events:none;z-index:9998;
+  transform:translate(-50%,-50%);
+  transition:width .25s,height .25s,border-color .25s,background .25s;
+}
+.cursor-ring.hovered{width:64px;height:64px;border-color:var(--blue-2);background:rgba(31,208,255,0.06);}
+@media (hover:none){.cursor-dot,.cursor-ring{display:none;}}
+
+/* nav */
+#navbar{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:22px 0;transition:all .4s ease;
+}
+#navbar.scrolled{
+  padding:14px 0;
+  background:rgba(5,7,13,0.65);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;letter-spacing:0.02em;display:flex;align-items:center;gap:10px;}
+.logo-mark{width:28px;height:28px;position:relative;flex-shrink:0;}
+.nav-links{display:flex;gap:36px;list-style:none;}
+.nav-links a{
+  font-size:14px;color:var(--muted);position:relative;padding:4px 0;transition:color .3s;
+}
+.nav-links a::after{
+  content:'';position:absolute;left:0;bottom:-2px;width:0;height:1px;
+  background:linear-gradient(90deg,var(--blue-2),var(--purple));transition:width .3s;
+}
+.nav-links a:hover{color:var(--text);}
+.nav-links a:hover::after{width:100%;}
+.btn{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:13px 26px;border-radius:100px;font-size:14px;font-weight:500;
+  transition:transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s;
+}
+.btn-primary{
+  background:linear-gradient(135deg,var(--blue) 0%,var(--purple-2) 100%);
+  color:#05070d;font-weight:600;
+  box-shadow:0 0 0 rgba(62,163,255,0);
+}
+.btn-primary:hover{box-shadow:0 8px 30px rgba(62,163,255,0.35);transform:translateY(-2px);}
+.btn-ghost{
+  border:1px solid rgba(255,255,255,0.15);color:var(--text);
+}
+.btn-ghost:hover{border-color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.04);}
+.btn-sm{padding:11px 22px;font-size:13px;}
+
+/* hero */
+#hero{position:relative;min-height:100svh;display:flex;align-items:center;padding-top:110px;overflow:hidden;}
+#hero-canvas{position:absolute;top:0;right:0;width:100%;height:100%;z-index:0;}
+.hero-grid{
+  position:relative;z-index:2;display:grid;grid-template-columns:1.1fr 0.9fr;gap:40px;align-items:center;width:100%;
+}
+.hero-headline{
+  font-size:clamp(42px,6vw,86px);line-height:0.98;font-weight:700;
+  margin-bottom:26px;
+}
+.hero-headline .line{display:block;overflow:hidden;}
+.hero-headline .line span{display:inline-block;transform:translateY(110%);}
+.hero-headline .grad{
+  background:linear-gradient(120deg,var(--blue-2),var(--purple) 60%,var(--blue));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.hero-sub{
+  font-size:17px;color:var(--muted);max-width:480px;line-height:1.65;margin-bottom:38px;
+}
+.hero-ctas{display:flex;gap:16px;flex-wrap:wrap;}
+.hero-stats{display:flex;gap:38px;margin-top:64px;}
+.hero-stats .stat-num{font-family:'Space Grotesk';font-size:26px;font-weight:700;color:var(--text);}
+.hero-stats .stat-label{font-size:12px;color:var(--muted-2);letter-spacing:0.06em;text-transform:uppercase;margin-top:4px;}
+.scroll-cue{
+  position:absolute;bottom:36px;left:50%;transform:translateX(-50%);z-index:2;
+  display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--muted-2);
+  font-family:'JetBrains Mono';font-size:11px;letter-spacing:0.15em;text-transform:uppercase;
+}
+.scroll-cue .stick{width:1px;height:36px;background:linear-gradient(var(--blue-2),transparent);position:relative;overflow:hidden;}
+.scroll-cue .stick::after{content:'';position:absolute;top:-100%;left:0;width:100%;height:100%;background:var(--blue-2);animation:scrollcue 1.8s ease-in-out infinite;}
+@keyframes scrollcue{0%{top:-100%;}60%{top:100%;}100%{top:100%;}}
+
+/* sections generic */
+section{position:relative;z-index:2;padding:150px 0;}
+.section-head{max-width:640px;margin-bottom:72px;}
+.section-head h2{font-size:clamp(30px,4vw,52px);font-weight:700;line-height:1.08;}
+.section-head p{color:var(--muted);font-size:16px;margin-top:18px;line-height:1.7;max-width:520px;}
+.reveal{opacity:0;transform:translateY(36px);}
+
+/* services */
+.services-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;}
+.service-card{
+  border-radius:var(--radius);padding:36px 32px 32px;position:relative;overflow:hidden;
+  min-height:520px;display:flex;flex-direction:column;
+  transform-style:preserve-3d;transition:border-color .4s, background .4s;
+}
+.service-card::before{
+  content:'';position:absolute;inset:0;border-radius:var(--radius);padding:1px;
+  background:linear-gradient(135deg,rgba(62,163,255,0.5),rgba(148,87,255,0.15) 40%,transparent 70%);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+  opacity:0;transition:opacity .4s;pointer-events:none;
+}
+.service-card:hover::before{opacity:1;}
+.service-card:hover{background:rgba(255,255,255,0.05);}
+.service-index{font-family:'JetBrains Mono';font-size:13px;color:var(--muted-2);margin-bottom:22px;}
+.service-canvas{width:100%;height:150px;margin-bottom:8px;}
+.service-card h3{font-size:24px;font-weight:700;margin-bottom:14px;}
+.service-card p.desc{color:var(--muted);font-size:14.5px;line-height:1.65;margin-bottom:22px;}
+.service-list{list-style:none;margin-top:auto;display:flex;flex-direction:column;gap:10px;}
+.service-list li{
+  font-size:13.5px;color:var(--muted);display:flex;align-items:center;gap:10px;
+  padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);
+}
+.service-list li:first-child{border-top:none;padding-top:0;}
+.service-list li::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--blue-2);flex-shrink:0;box-shadow:0 0 8px var(--blue-2);}
+
+/* why us */
+.why-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
+.why-card{
+  padding:30px 26px;border-radius:16px;transition:transform .4s cubic-bezier(.2,.8,.2,1), background .4s;
+}
+.why-card:hover{transform:translateY(-8px);background:rgba(255,255,255,0.05);}
+.why-num{font-family:'JetBrains Mono';font-size:12px;color:var(--blue-2);margin-bottom:26px;}
+.why-card h4{font-size:19px;font-weight:600;margin-bottom:10px;}
+.why-card p{font-size:13.5px;color:var(--muted);line-height:1.6;}
+
+/* portfolio */
+.filter-row{display:flex;gap:10px;margin-bottom:48px;flex-wrap:wrap;}
+.filter-btn{
+  padding:9px 20px;border-radius:100px;border:1px solid rgba(255,255,255,0.1);
+  font-size:13px;color:var(--muted);transition:all .3s;
+}
+.filter-btn.active,.filter-btn:hover{border-color:var(--blue-2);color:var(--text);background:rgba(62,163,255,0.08);}
+.portfolio-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;}
+.project-card{
+  border-radius:var(--radius);overflow:hidden;position:relative;
+  border:1px solid var(--panel-border);background:rgba(255,255,255,0.02);
+}
+.project-media{
+  aspect-ratio:16/10.5;position:relative;overflow:hidden;
+}
+.project-media .grad-bg{
+  position:absolute;inset:0;transition:transform .7s cubic-bezier(.2,.8,.2,1);
+}
+.project-card:hover .grad-bg{transform:scale(1.08);}
+.project-media .proj-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transition:transform .7s cubic-bezier(.2,.8,.2,1);}
+.project-card:hover .proj-img{transform:scale(1.08);}
+.project-media .cat-tag{
+  position:absolute;top:16px;left:16px;font-family:'JetBrains Mono';font-size:11px;
+  padding:6px 12px;border-radius:100px;letter-spacing:0.06em;text-transform:uppercase;
+  background:rgba(5,7,13,0.55);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);
+}
+.project-body{padding:26px 26px 28px;}
+.project-body h3{font-size:20px;font-weight:600;margin-bottom:8px;}
+.project-body p{font-size:13.5px;color:var(--muted);margin-bottom:20px;line-height:1.6;}
+.view-link{
+  font-size:13px;display:inline-flex;align-items:center;gap:8px;color:var(--blue-2);font-weight:500;
+}
+.view-link svg{transition:transform .3s;}
+.project-card:hover .view-link svg{transform:translate(4px,-4px);}
+
+/* process */
+.process-list{display:flex;flex-direction:column;}
+.process-item{
+  display:grid;grid-template-columns:100px 1fr 340px;gap:36px;align-items:start;
+  padding:38px 0;border-top:1px solid rgba(255,255,255,0.08);
+}
+.process-item:last-child{border-bottom:1px solid rgba(255,255,255,0.08);}
+.process-num{font-family:'Space Grotesk';font-size:15px;color:var(--muted-2);padding-top:6px;}
+.process-item h3{font-size:26px;font-weight:700;margin-bottom:10px;}
+.process-item p{color:var(--muted);font-size:14.5px;line-height:1.65;}
+.process-bar{height:2px;background:rgba(255,255,255,0.08);position:relative;margin-top:16px;border-radius:2px;overflow:hidden;}
+.process-bar span{position:absolute;inset:0;width:0%;background:linear-gradient(90deg,var(--blue-2),var(--purple));border-radius:2px;}
+
+/* about */
+.about-grid{display:grid;grid-template-columns:1fr 0.85fr;gap:70px;align-items:center;}
+.about-grid h2{font-size:clamp(28px,3.6vw,44px);font-weight:700;line-height:1.15;margin-bottom:24px;}
+.about-grid p{color:var(--muted);font-size:16px;line-height:1.75;margin-bottom:18px;}
+.about-canvas-wrap{aspect-ratio:1/1;border-radius:24px;position:relative;overflow:hidden;}
+
+/* stats */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);border-radius:var(--radius);overflow:hidden;border:1px solid var(--panel-border);}
+.stat-box{padding:44px 30px;text-align:center;border-left:1px solid var(--panel-border);}
+.stat-box:first-child{border-left:none;}
+.stat-box .num{font-family:'Space Grotesk';font-size:48px;font-weight:700;background:linear-gradient(120deg,var(--blue-2),var(--purple));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.stat-box .lbl{margin-top:8px;font-size:13px;color:var(--muted);letter-spacing:0.04em;text-transform:uppercase;}
+
+/* testimonials */
+.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+.testi-card{padding:32px;border-radius:var(--radius);display:flex;flex-direction:column;height:100%;}
+.testi-quote{font-size:15px;line-height:1.7;color:#dfe3ee;margin-bottom:28px;flex-grow:1;}
+.testi-person{display:flex;align-items:center;gap:12px;}
+.testi-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;}
+.testi-name{font-size:14px;font-weight:600;}
+.testi-role{font-size:12.5px;color:var(--muted-2);}
+.testi-stars{color:var(--blue-2);font-size:13px;letter-spacing:2px;margin-bottom:14px;}
+
+/* final cta */
+#final-cta{padding:0;}
+.cta-box{
+  position:relative;border-radius:28px;overflow:hidden;padding:110px 40px;text-align:center;
+  border:1px solid var(--panel-border);
+}
+.cta-canvas{position:absolute;inset:0;z-index:0;}
+.cta-content{position:relative;z-index:2;}
+.cta-content h2{font-size:clamp(32px,5.5vw,64px);font-weight:700;max-width:800px;margin:0 auto 22px;line-height:1.08;}
+.cta-content p{color:var(--muted);font-size:17px;margin-bottom:40px;}
+
+/* contact */
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:70px;}
+.contact-info h2{font-size:clamp(28px,3.6vw,42px);font-weight:700;margin-bottom:20px;line-height:1.15;}
+.contact-info p{color:var(--muted);font-size:16px;line-height:1.7;margin-bottom:40px;}
+.contact-channel{display:flex;align-items:center;gap:16px;padding:18px 0;border-top:1px solid rgba(255,255,255,0.08);}
+.contact-channel:last-child{border-bottom:1px solid rgba(255,255,255,0.08);}
+.channel-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(62,163,255,0.1);border:1px solid rgba(62,163,255,0.25);flex-shrink:0;}
+.channel-label{font-size:12px;color:var(--muted-2);text-transform:uppercase;letter-spacing:0.05em;}
+.channel-value{font-size:15px;font-weight:500;margin-top:2px;}
+
+.form-panel{padding:38px;border-radius:var(--radius);}
+.field{margin-bottom:20px;position:relative;}
+.field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:8px;letter-spacing:0.03em;}
+.field input,.field select,.field textarea{
+  width:100%;padding:14px 16px;border-radius:12px;
+  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);
+  color:var(--text);font-size:14.5px;font-family:inherit;transition:border-color .3s,background .3s;
+}
+.field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%238b93a8' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;}
+.field textarea{resize:vertical;min-height:110px;}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--blue-2);background:rgba(62,163,255,0.05);}
+.field.error input,.field.error select,.field.error textarea{border-color:#ff5c7a;}
+.field-error{font-size:12px;color:#ff5c7a;margin-top:6px;display:none;}
+.field.error .field-error{display:block;}
+.form-note{font-size:12.5px;color:var(--muted-2);margin-top:6px;}
+.form-success{
+  display:none;padding:16px 18px;border-radius:12px;background:rgba(62,163,255,0.08);
+  border:1px solid rgba(62,163,255,0.3);font-size:14px;color:var(--blue-2);margin-bottom:20px;
+}
+.form-success.show{display:block;}
+.form-error{display:none;padding:14px 16px;border-radius:12px;background:rgba(255,92,122,0.08);border:1px solid rgba(255,92,122,0.35);font-size:13.5px;color:#ff8fa3;margin-bottom:16px;line-height:1.5;word-break:break-word;}
+.form-error.show{display:block;}
+.form-confirm{display:none;text-align:center;padding:30px 10px;}
+.form-confirm.show{display:block;animation:confirmIn .5s cubic-bezier(.2,.8,.2,1);}
+.confirm-check{width:84px;height:84px;border-radius:50%;margin:0 auto 24px;display:flex;align-items:center;justify-content:center;background:rgba(46,204,113,0.12);border:2px solid #2ecc71;box-shadow:0 0 40px rgba(46,204,113,0.25);}
+.confirm-check svg{width:42px;height:42px;stroke:#2ecc71;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;}
+.form-confirm h3{font-family:'Space Grotesk',sans-serif;font-size:clamp(20px,2.4vw,26px);font-weight:700;margin-bottom:18px;line-height:1.3;}
+.confirm-status{display:inline-block;padding:8px 18px;border-radius:100px;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.4);color:#2ecc71;font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:0.12em;font-weight:500;margin-bottom:18px;}
+.form-confirm p{color:var(--muted);font-size:16px;line-height:1.6;}
+@keyframes confirmIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+/* footer */
+footer{padding:70px 0 34px;border-top:1px solid rgba(255,255,255,0.07);}
+.footer-top{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:40px;margin-bottom:60px;}
+.footer-brand p{color:var(--muted);font-size:13.5px;margin-top:16px;max-width:280px;line-height:1.6;}
+.footer-col h5{font-size:12px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted-2);margin-bottom:18px;}
+.footer-col ul{list-style:none;display:flex;flex-direction:column;gap:12px;}
+.footer-col a{font-size:14px;color:var(--muted);transition:color .3s;}
+.footer-col a:hover{color:var(--blue-2);}
+.footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:28px;border-top:1px solid rgba(255,255,255,0.07);font-size:12.5px;color:var(--muted-2);flex-wrap:wrap;gap:14px;}
+.social-row{display:flex;gap:14px;}
+.social-row a{width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;transition:all .3s;}
+.social-row a:hover{border-color:var(--blue-2);color:var(--blue-2);transform:translateY(-3px);}
+
+/* responsive */
+@media(max-width:1080px){
+  .services-grid{grid-template-columns:repeat(2,1fr);}
+  .why-grid{grid-template-columns:repeat(2,1fr);}
+  .footer-top{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:900px){
+  .hero-grid{grid-template-columns:1fr;}
+  #hero-canvas{opacity:0.55;}
+  .about-grid{grid-template-columns:1fr;}
+  .contact-grid{grid-template-columns:1fr;}
+  .process-item{grid-template-columns:1fr;gap:14px;}
+  .process-item .process-bar-wrap{display:none;}
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .stat-box{border-left:none;border-top:1px solid var(--panel-border);}
+  .stat-box:nth-child(1),.stat-box:nth-child(2){border-top:none;}
+  .portfolio-grid{grid-template-columns:1fr;}
+  .testi-grid{grid-template-columns:1fr;}
+}
+@media(max-width:768px){
+  .nav-links{display:none;}
+  section{padding:100px 0;}
+  .services-grid{grid-template-columns:1fr;}
+  .why-grid{grid-template-columns:1fr;}
+  .wrap{padding:0 22px;}
+  .cta-box{padding:70px 24px;}
+}
+.owner-name {
+    margin-top: 14px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    letter-spacing: 2px;
+    font-weight: 600;
+    color: #ffffff;
+    opacity: 0.75;
+}
+
+/* ===== v2 additions ===== */
+#progress{position:fixed;top:0;left:0;height:2px;width:0;z-index:200;background:linear-gradient(90deg,var(--blue-2),var(--purple));}
+.burger{display:none;width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.15);align-items:center;justify-content:center;flex-direction:column;gap:5px;}
+.burger span{width:16px;height:1.5px;background:var(--text);display:block;}
+.nav-cta{display:flex;align-items:center;gap:12px;}
+@media(max-width:768px){
+  .burger{display:flex;}
+  .nav-links.open{display:flex;flex-direction:column;gap:0;position:absolute;top:100%;left:0;right:0;background:rgba(5,7,13,.96);border-bottom:1px solid rgba(255,255,255,.08);padding:10px 22px 20px;}
+  .nav-links.open a{display:block;padding:14px 0;font-size:16px;}
+}
+.wa-float{position:fixed;right:22px;bottom:22px;z-index:150;width:56px;height:56px;border-radius:50%;background:#25d366;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 28px rgba(37,211,102,.35);transition:transform .3s;}
+.wa-float:hover{transform:scale(1.08);}
+.pkg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;align-items:stretch;}
+.pkg-card{padding:36px 32px;border-radius:var(--radius);display:flex;flex-direction:column;}
+.pkg-card.featured{border-color:var(--blue-2);background:rgba(62,163,255,.07);}
+.pkg-badge{align-self:flex-start;font-size:12px;padding:5px 12px;border-radius:100px;background:rgba(31,208,255,.12);color:var(--blue-2);margin-bottom:16px;}
+.pkg-card h3{font-size:22px;margin-bottom:8px;}
+.pkg-price{font-family:'Space Grotesk';font-size:42px;font-weight:700;margin:6px 0 22px;}
+.pkg-card ul{list-style:none;display:flex;flex-direction:column;gap:11px;margin-bottom:30px;flex-grow:1;}
+.pkg-card li{font-size:14px;color:var(--muted);display:flex;gap:10px;}
+.pkg-card li::before{content:'✓';color:var(--blue-2);}
+.faq-list{max-width:820px;}
+.faq-list details{border-top:1px solid rgba(255,255,255,.08);padding:22px 0;}
+.faq-list details:last-child{border-bottom:1px solid rgba(255,255,255,.08);}
+.faq-list summary{cursor:pointer;font-family:'Space Grotesk';font-size:19px;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:20px;}
+.faq-list summary::after{content:'+';color:var(--blue-2);font-size:24px;line-height:1;}
+.faq-list details[open] summary::after{content:'–';}
+.faq-list p{color:var(--muted);font-size:15px;line-height:1.7;margin-top:14px;max-width:680px;}
+@media(max-width:900px){.pkg-grid{grid-template-columns:1fr;}}
+#admLink{opacity:.6}#admLink:hover{opacity:1;color:var(--blue-2);}
+
+/* admin */
+.adm{position:fixed;inset:0;z-index:9990;background:#070a13;overflow:auto;}
+.adm[hidden],.adm [hidden]{display:none!important;}
+.adm-login{max-width:380px;margin:14vh auto 0;padding:34px;border-radius:var(--radius);}
+.adm-login h2{font-size:24px;margin-bottom:6px;}
+.adm-login p{color:var(--muted);font-size:13.5px;margin-bottom:20px;line-height:1.6;}
+.adm-app{display:grid;grid-template-columns:230px 1fr;min-height:100%;}
+.adm-side{border-right:1px solid var(--panel-border);padding:24px 16px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh;}
+.adm-side .logo{padding:0 10px 20px;}
+.adm-side button{text-align:left;padding:11px 14px;border-radius:10px;font-size:14px;color:var(--muted);}
+.adm-side button:hover,.adm-side button.on{background:rgba(62,163,255,.1);color:var(--text);}
+.adm-side .sp{flex-grow:1;}
+.adm-main{padding:36px 40px 80px;max-width:980px;}
+.adm-main h2{font-size:28px;margin-bottom:6px;}
+.adm-main .sub{color:var(--muted);font-size:14px;margin-bottom:26px;line-height:1.6;}
+.adm-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px;}
+.adm-card{padding:20px;border-radius:14px;}
+.adm-card b{font-family:'Space Grotesk';font-size:32px;display:block;}
+.adm-card span{font-size:12.5px;color:var(--muted);}
+.adm-row{display:flex;align-items:center;gap:14px;padding:14px 16px;border:1px solid var(--panel-border);border-radius:12px;margin-bottom:10px;background:rgba(255,255,255,.02);}
+.adm-row .t{flex-grow:1;min-width:0;}
+.adm-row .t b{display:block;font-size:15px;}
+.adm-row .t small{color:var(--muted);font-size:12.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.adm-thumb{width:64px;height:42px;border-radius:8px;flex:none;border:1px solid var(--panel-border);background:rgba(255,255,255,.04) center/cover no-repeat;}
+.adm-row.wrap{flex-wrap:wrap;}
+.adm-btn{padding:8px 16px;border-radius:100px;border:1px solid rgba(255,255,255,.15);font-size:13px;}
+.adm-btn:hover{border-color:var(--blue-2);}
+.adm-btn.del:hover{border-color:#ff5c7a;color:#ff5c7a;}
+.adm-btn.pri{background:linear-gradient(135deg,var(--blue),var(--purple-2));border:none;color:#05070d;font-weight:600;}
+.adm-form{margin-top:26px;padding:26px;border-radius:var(--radius);}
+.adm-form h3{font-size:18px;margin-bottom:18px;}
+.adm-form .field input[type=color]{padding:4px;height:46px;}
+.adm-form .field input[type=checkbox]{width:auto;}
+.adm-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;}
+.adm-msg{padding:18px;border:1px solid var(--panel-border);border-radius:12px;margin-bottom:12px;}
+.adm-msg.new{border-color:rgba(31,208,255,.45);}
+.adm-msg p{font-size:14px;color:#dfe3ee;line-height:1.6;margin:10px 0 14px;white-space:pre-wrap;}
+.adm-msg small{color:var(--muted);font-size:12.5px;}
+.adm-note{font-size:13px;color:var(--muted);padding:14px 16px;border-radius:12px;background:rgba(148,87,255,.08);border:1px solid rgba(148,87,255,.25);margin-bottom:22px;line-height:1.6;}
+.adm-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#101627;border:1px solid var(--blue-2);padding:12px 20px;border-radius:100px;font-size:13.5px;z-index:9995;}
+@media(max-width:800px){.adm-app{grid-template-columns:1fr;}.adm-side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;}.adm-side .logo,.adm-side .sp{display:none;}.adm-main{padding:24px 18px 80px;}.adm-cards{grid-template-columns:repeat(2,1fr);}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div class="bg-wash"></div>
+<div class="noise"></div>
+<div class="cursor-dot" id="cursorDot"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAVBAR -->
+<nav id="navbar">
+  <div class="wrap nav-inner">
+    <a href="#hero" class="logo">
+      <span class="logo-mark">
+        <svg viewBox="0 0 28 28" width="28" height="28"><polygon points="14,1 26,7.5 26,20.5 14,27 2,20.5 2,7.5" fill="none" stroke="url(#lg)" stroke-width="1.6"/><circle cx="14" cy="14" r="4" fill="url(#lg)"/><defs><linearGradient id="lg" x1="0" y1="0" x2="28" y2="28"><stop offset="0" stop-color="#1fd0ff"/><stop offset="1" stop-color="#9457ff"/></linearGradient></defs></svg>
+      </span>
+      NOVARC
+    </a>
+    <ul class="nav-links">
+      <li><a href="#hero">Home</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#work">Work</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#process">Process</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <div class="nav-cta"><a href="#contact" class="btn btn-primary btn-sm magnetic">Let's Talk</a><button class="burger" id="burger" aria-label="Menu"><span></span><span></span><span></span></button></div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow">AI Automation · Marketing · Creative Studio</div>
+      <h1 class="hero-headline">
+        <div class="line"><span>WE BUILD.</span></div>
+        <div class="line"><span class="grad">WE AUTOMATE.</span></div>
+        <div class="line"><span>WE GROW.</span></div>
+      </h1>
+      <div class="owner-name" id="setOwner">OWNER : JIHAD HASSAN JUBAYER</div>
+      <p class="hero-sub" id="setHeroSub">AI Automation, Digital Marketing &amp; Creative Solutions designed to help modern businesses grow faster.</p>
+      <div class="hero-ctas">
+        <a href="#contact" class="btn btn-primary magnetic">Start a Project</a>
+        <a href="#services" class="btn btn-ghost magnetic">Explore Services</a>
+      </div>
+      <div class="hero-stats">
+        <div><div class="stat-num">50+</div><div class="stat-label">Projects</div></div>
+        <div><div class="stat-num">20+</div><div class="stat-label">Clients</div></div>
+        <div><div class="stat-num">24/7</div><div class="stat-label">Automation</div></div>
+      </div>
+    </div>
+    <div></div>
+  </div>
+  <div class="scroll-cue"><span>Scroll</span><div class="stick"></div></div>
+</section>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">What We Do</div>
+      <h2>WHAT WE DO</h2>
+      <p>Technology, marketing and creative solutions built to move your business forward.</p>
+    </div>
+    <div class="services-grid">
+
+      <div class="service-card glass reveal tilt-card" data-tilt>
+        <div class="service-index mono">01 / AI</div>
+        <canvas class="service-canvas" data-scene="automation"></canvas>
+        <h3>AI AUTOMATION</h3>
+        <p class="desc">Automate repetitive tasks, communicate with customers and build intelligent workflows that work around the clock.</p>
+        <ul class="service-list">
+          <li>AI Voice Agents</li>
+          <li>AI Chatbots</li>
+          <li>Business Automation</li>
+          <li>Lead Generation Automation</li>
+          <li>CRM Automation</li>
+          <li>Workflow Automation</li>
+          <li>AI Customer Support</li>
+        </ul>
+      </div>
+
+      <div class="service-card glass reveal tilt-card" data-tilt>
+        <div class="service-index mono">02 / GROWTH</div>
+        <canvas class="service-canvas" data-scene="marketing"></canvas>
+        <h3>DIGITAL MARKETING</h3>
+        <p class="desc">Turn attention into customers with data-driven marketing strategies and high-converting campaigns.</p>
+        <ul class="service-list">
+          <li>Facebook Ads</li>
+          <li>Instagram Marketing</li>
+          <li>Lead Generation</li>
+          <li>Social Media Management</li>
+          <li>Content Strategy</li>
+          <li>Conversion Optimization</li>
+          <li>Campaign Management</li>
+        </ul>
+      </div>
+
+      <div class="service-card glass reveal tilt-card" data-tilt>
+        <div class="service-index mono">03 / CREATIVE</div>
+        <canvas class="service-canvas" data-scene="creative"></canvas>
+        <h3>CREATIVE STUDIO</h3>
+        <p class="desc">Create scroll-stopping visuals that make your brand look professional, memorable and impossible to ignore.</p>
+        <ul class="service-list">
+          <li>Social Media Designs</li>
+          <li>Product Photo Editing</li>
+          <li>Reels &amp; Shorts</li>
+          <li>Promotional Videos</li>
+          <li>Ad Creatives</li>
+          <li>Motion Graphics</li>
+          <li>Video Editing</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- WHY CHOOSE US -->
+<section id="why">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">Why Novarc</div>
+      <h2>WHY WORK WITH US?</h2>
+    </div>
+    <div class="why-grid">
+      <div class="why-card glass reveal">
+        <div class="why-num mono">01</div>
+        <h4>AI-POWERED</h4>
+        <p>Use modern AI technology to make businesses smarter.</p>
+      </div>
+      <div class="why-card glass reveal">
+        <div class="why-num mono">02</div>
+        <h4>RESULT-DRIVEN</h4>
+        <p>Focus on measurable growth instead of vanity metrics.</p>
+      </div>
+      <div class="why-card glass reveal">
+        <div class="why-num mono">03</div>
+        <h4>CREATIVE</h4>
+        <p>Combine technology with strong visual design.</p>
+      </div>
+      <div class="why-card glass reveal">
+        <div class="why-num mono">04</div>
+        <h4>BUILT FOR GROWTH</h4>
+        <p>Create systems that can scale with the business.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORK -->
+<section id="work">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">Selected Work</div>
+      <h2>OUR WORK</h2>
+      <p>A cross-section of automation systems, campaigns and visuals we've shipped for clients.</p>
+    </div>
+    <div class="filter-row reveal">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="AI Automation">AI Automation</button>
+      <button class="filter-btn" data-filter="Marketing">Marketing</button>
+      <button class="filter-btn" data-filter="Photo Editing">Photo Editing</button>
+      <button class="filter-btn" data-filter="Video Editing">Video Editing</button>
+    </div>
+    <div class="portfolio-grid" id="portfolioGrid"></div>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section id="process">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">How We Work</div>
+      <h2 id="procTitle">HOW WE WORK</h2>
+      <p id="procSub">A tested five-step system we run for every client, from first call to ongoing optimization.</p>
+    </div>
+    <div class="process-list" id="processList"></div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">Packages</div>
+      <h2>SIMPLE PACKAGES</h2>
+      <p>Pick a starting point. Every package can be adjusted to fit your business.</p>
+    </div>
+    <div class="pkg-grid" id="pkgGrid"></div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="wrap about-grid">
+    <div class="reveal">
+      <div class="eyebrow">About Novarc</div>
+      <h2>WE COMBINE TECHNOLOGY, CREATIVITY &amp; STRATEGY.</h2>
+      <p>Novarc is a technology and creative agency for businesses that want to operate like a modern company. We build AI systems that answer customers, qualify leads and remove repetitive work, run marketing that's measured against real revenue, and produce visuals that make a brand worth stopping for.</p>
+      <p>Every engagement starts with the same question: what would this business look like if it ran on autopilot? Everything we build — automation, campaigns, or creative — works toward that answer.</p>
+      <a href="#contact" class="btn btn-ghost magnetic">Work With Us</a>
+    </div>
+    <div class="about-canvas-wrap glass reveal">
+      <canvas id="about-canvas" style="width:100%;height:100%;"></canvas>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section id="stats">
+  <div class="wrap">
+    <div class="stats-grid glass reveal">
+      <div class="stat-box"><div class="num" data-count="50" data-suffix="+">0</div><div class="lbl">Projects</div></div>
+      <div class="stat-box"><div class="num" data-count="20" data-suffix="+">0</div><div class="lbl">Happy Clients</div></div>
+      <div class="stat-box"><div class="num" data-count="10" data-suffix="+">0</div><div class="lbl">Services</div></div>
+      <div class="stat-box"><div class="num" data-static="24/7">0</div><div class="lbl">AI Automation</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section id="testimonials">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">Client Words</div>
+      <h2>WHAT OUR CLIENTS SAY</h2>
+    </div>
+    <div class="testi-grid" id="testiGrid"></div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="wrap">
+    <div class="section-head reveal"><div class="eyebrow">Questions</div><h2>FREQUENTLY ASKED</h2></div>
+    <div class="faq-list" id="faqList"></div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section id="final-cta">
+  <div class="wrap">
+    <div class="cta-box glass reveal">
+      <canvas class="cta-canvas" id="cta-canvas"></canvas>
+      <div class="cta-content">
+        <div class="eyebrow" style="justify-content:center;">Let's Talk</div>
+        <h2>READY TO BUILD SOMETHING POWERFUL?</h2>
+        <p>Let's automate, market and transform your business.</p>
+        <a href="#contact" class="btn btn-primary magnetic">START YOUR PROJECT</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="wrap contact-grid">
+    <div class="contact-info reveal">
+      <div class="eyebrow">Get In Touch</div>
+      <h2>LET'S START YOUR PROJECT</h2>
+      <p>Tell us about your business and where you want it to go. We typically reply within one business day.</p>
+
+      <div class="contact-channel">
+        <div class="channel-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3ea3ff" stroke-width="1.8"><path d="M3 6l9 7 9-7"/><rect x="3" y="5" width="18" height="14" rx="2"/></svg></div>
+        <div><div class="channel-label">Email</div><div class="channel-value" id="setEmail">hello@novarc.agency</div></div>
+      </div>
+      <div class="contact-channel">
+        <div class="channel-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3ea3ff" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        <div><div class="channel-label">WhatsApp</div><div class="channel-value" id="setWa">+1 (415) 555-0192</div></div>
+      </div>
+      <div class="contact-channel">
+        <div class="channel-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3ea3ff" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 3a13 13 0 0 0 0 18M12 3a13 13 0 0 1 0 18M3 12h18"/></svg></div>
+        <div><div class="channel-label">Social Media</div><div class="channel-value" id="setSocial">@novarc.agency</div></div>
+      </div>
+    </div>
+
+    <form class="form-panel glass reveal" id="contactForm" name="contact" novalidate>
+      <p style="display:none;">
+        <label>Don’t fill this out if you’re human: <input name="bot-field" tabindex="-1" autocomplete="off"></label>
+      </p>
+      <div class="form-confirm" id="formConfirm" role="status" aria-live="polite" tabindex="-1">
+        <div class="confirm-check"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+        <h3>Your information has been submitted successfully!</h3>
+        <div class="confirm-status">STATUS: UNDER REVIEW</div>
+        <p>Our team will contact you very soon.</p>
+      </div>
+      <div id="formFields">
+
+      <div class="field" id="field-name">
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" placeholder="Your full name">
+        <div class="field-error">Please enter your name.</div>
+      </div>
+      <div class="field" id="field-email">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" placeholder="you@company.com">
+        <div class="field-error">Please enter a valid email address.</div>
+      </div>
+      <div class="field" id="field-company">
+        <label for="company">Company</label>
+        <input type="text" id="company" name="company" placeholder="Company name">
+        <div class="field-error">Please enter your company name.</div>
+      </div>
+      <div class="field">
+        <label for="phone">WhatsApp / Phone</label>
+        <input type="tel" id="phone" name="phone" placeholder="+880 1XXXXXXXXX">
+      </div>
+
+      <div class="field">
+        <label for="website">Website / Social Media</label>
+        <input type="url" id="website" name="website" placeholder="https://...">
+      </div>
+
+      <div class="field" id="field-service">
+        <label for="service">Service</label>
+        <select id="service" name="service">
+          <option value="">Select a service</option>
+          <option value="AI Automation">AI Automation</option>
+          <option value="Digital Marketing">Digital Marketing</option>
+          <option value="Photo & Video Editing">Photo &amp; Video Editing</option>
+          <option value="Multiple Services">Multiple Services</option>
+        </select>
+        <div class="field-error">Please select a service.</div>
+      </div>
+      <div class="field">
+        <label for="budget">Estimated Budget</label>
+        <select id="budget" name="budget">
+          <option value="">Select a budget range</option>
+          <option value="Under $250">Under $250</option>
+          <option value="$250 - $500">$250 - $500</option>
+          <option value="$500 - $1,000">$500 - $1,000</option>
+          <option value="$1,000 - $2,500">$1,000 - $2,500</option>
+          <option value="$2,500+">$2,500+</option>
+          <option value="Not sure yet">Not sure yet</option>
+        </select>
+      </div>
+
+      <div class="field" id="field-message">
+        <label for="message">Project Details</label>
+        <textarea id="message" name="message" placeholder="Tell us about your business, what you need, your goals, deadline, etc."></textarea>
+        <div class="field-error">Please enter a short message (min. 10 characters).</div>
+      </div>
+
+      <div class="form-error" id="formError" role="alert"></div>
+      <button type="submit" class="btn btn-primary magnetic" style="width:100%;">Send Project Request</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="logo">
+          <span class="logo-mark"><svg viewBox="0 0 28 28" width="28" height="28"><polygon points="14,1 26,7.5 26,20.5 14,27 2,20.5 2,7.5" fill="none" stroke="url(#lg2)" stroke-width="1.6"/><circle cx="14" cy="14" r="4" fill="url(#lg2)"/><defs><linearGradient id="lg2" x1="0" y1="0" x2="28" y2="28"><stop offset="0" stop-color="#1fd0ff"/><stop offset="1" stop-color="#9457ff"/></linearGradient></defs></svg></span>
+          NOVARC
+        </div>
+        <p>AI Automation • Digital Marketing • Creative Studio</p>
+      </div>
+      <div class="footer-col">
+        <h5>Navigate</h5>
+        <ul>
+          <li><a href="#hero">Home</a></li>
+          <li><a href="#services">Services</a></li>
+          <li><a href="#work">Work</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Services</h5>
+        <ul>
+          <li><a href="#services">AI Automation</a></li>
+          <li><a href="#services">Digital Marketing</a></li>
+          <li><a href="#services">Creative Studio</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Follow</h5>
+        <div class="social-row">
+          <a href="#" aria-label="Facebook"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.4h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.4v7A10 10 0 0 0 22 12z"/></svg></a>
+          <a href="#" aria-label="Instagram"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg></a>
+          <a href="#" aria-label="LinkedIn"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5C4.98 4.88 3.87 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM.24 8.25h4.5V23H.24V8.25zM8.5 8.25h4.3v2h.06c.6-1.1 2.06-2.3 4.24-2.3 4.53 0 5.37 2.98 5.37 6.86V23h-4.5v-6.86c0-1.64-.03-3.75-2.29-3.75-2.29 0-2.64 1.79-2.64 3.63V23H8.5V8.25z"/></svg></a>
+          <a href="#" aria-label="TikTok"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 5.8a4.3 4.3 0 0 1-3.1-3.7h-3.2v14.3a2.6 2.6 0 1 1-2.4-2.6v-3.2a5.8 5.8 0 1 0 5.6 5.8V9.4a7.3 7.3 0 0 0 3.9 1.2V7.4a4.3 4.3 0 0 1-.8-1.6z"/></svg></a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 NOVARC. All Rights Reserved.</span>
+      <span>Built with AI, marketing &amp; a lot of coffee. · <a href="#admin" id="admLink">Admin</a></span>
+    </div>
+  </div>
+</footer>
+
+<a class="wa-float" id="waFloat" href="https://wa.me/" target="_blank" rel="noopener" aria-label="Chat on WhatsApp"><svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.2 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.6c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.1 1 2.1 1.300 2.400 1.500.3.1.5.1.6-.1l.9-1.100c.2-.2.4-.2.6-.1l1.900.9c.3.1.5.2.5.3.1.100.1.600-.1 1.200z"/></svg></a>
+<div class="adm" id="admin" hidden>
+  <div class="adm-login glass" id="admLogin">
+    <h2>Admin login</h2>
+    <p>Enter the admin password to manage your website.</p>
+    <div class="field"><label for="admPw">Password</label><input type="password" id="admPw" autocomplete="current-password"><div class="field-error" id="admErr">Wrong password.</div></div>
+    <div class="adm-actions"><button class="adm-btn pri" id="admGo">Log in</button><button class="adm-btn" id="admBack">Back to site</button></div>
+  </div>
+  <div class="adm-app" id="admApp" hidden>
+    <aside class="adm-side" id="admNav">
+      <div class="logo">NOVARC Admin</div>
+      <button data-tab="dashboard">Dashboard</button>
+      <button data-tab="messages">Messages</button>
+      <button data-tab="projects">Projects</button>
+      <button data-tab="process">How We Work</button>
+      <button data-tab="testimonials">Testimonials</button>
+      <button data-tab="packages">Packages</button>
+      <button data-tab="faqs">FAQ</button>
+      <button data-tab="settings">Site settings</button>
+      <button data-tab="account">Backup &amp; password</button>
+      <div class="sp"></div>
+      <button id="admView">View site</button>
+      <button id="admOut">Log out</button>
+    </aside>
+    <main class="adm-main" id="admMain"></main>
+  </div>
+</div>
+<script>
+/* ========================================================
+   UTIL
+======================================================== */
+const isTouch = window.matchMedia('(hover: none)').matches;
+const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+gsap.registerPlugin(ScrollTrigger);
+const DPR = Math.min(window.devicePixelRatio || 1, 2);
+const isMobile = window.innerWidth < 768;
+const PARTICLE_COUNT = isMobile ? 500 : 1400;
+
+/* ========================================================
+   CUSTOM CURSOR
+======================================================== */
+if(!isTouch){
+  const dot = document.getElementById('cursorDot');
+  const ring = document.getElementById('cursorRing');
+  let mx=0,my=0, rx=0, ry=0;
+  window.addEventListener('mousemove', e=>{
+    mx=e.clientX; my=e.clientY;
+    dot.style.left=mx+'px'; dot.style.top=my+'px';
+  });
+  function loop(){
+    rx += (mx-rx)*0.16; ry += (my-ry)*0.16;
+    ring.style.left=rx+'px'; ring.style.top=ry+'px';
+    requestAnimationFrame(loop);
+  }
+  loop();
+  document.querySelectorAll('a,button,.tilt-card,input,select,textarea').forEach(el=>{
+    el.addEventListener('mouseenter',()=>ring.classList.add('hovered'));
+    el.addEventListener('mouseleave',()=>ring.classList.remove('hovered'));
+  });
+}
+
+/* ========================================================
+   NAVBAR SCROLL STATE
+======================================================== */
+const navbar = document.getElementById('navbar');
+ScrollTrigger.create({
+  start: 40, end: 99999,
+  onUpdate: self => navbar.classList.toggle('scrolled', self.scroll() > 40)
+});
+
+/* ========================================================
+   MAGNETIC BUTTONS
+======================================================== */
+if(!isTouch){
+  document.querySelectorAll('.magnetic').forEach(btn=>{
+    btn.addEventListener('mousemove', e=>{
+      const r = btn.getBoundingClientRect();
+      const x = e.clientX - r.left - r.width/2;
+      const y = e.clientY - r.top - r.height/2;
+      gsap.to(btn,{x:x*0.25, y:y*0.4, duration:0.4, ease:'power2.out'});
+    });
+    btn.addEventListener('mouseleave', ()=>{
+      gsap.to(btn,{x:0,y:0,duration:0.5,ease:'elastic.out(1,0.4)'});
+    });
+  });
+}
+
+/* ========================================================
+   HERO HEADLINE REVEAL
+======================================================== */
+gsap.to('.hero-headline .line span', {
+  y:0, duration:1.1, ease:'power4.out', stagger:0.12, delay:0.3
+});
+gsap.from('.eyebrow, .hero-sub, .hero-ctas, .hero-stats', {
+  opacity:0, y:20, duration:1, stagger:0.12, delay:0.9, ease:'power2.out'
+});
+
+/* ========================================================
+   SCROLL REVEALS
+======================================================== */
+document.querySelectorAll('.reveal').forEach(el=>{
+  gsap.to(el, {
+    opacity:1, y:0, duration:0.9, ease:'power3.out',
+    scrollTrigger:{ trigger:el, start:'top 88%' }
+  });
+});
+
+/* ========================================================
+   PROCESS BARS
+======================================================== */
+document.querySelectorAll('.process-bar span').forEach(bar=>{
+  gsap.to(bar,{
+    width:'100%', duration:1.2, ease:'power2.out',
+    scrollTrigger:{trigger:bar, start:'top 85%'}
+  });
+});
+
+/* ========================================================
+   STAT COUNTERS
+======================================================== */
+document.querySelectorAll('.num[data-count]').forEach(el=>{
+  const target = parseInt(el.dataset.count,10);
+  const suffix = el.dataset.suffix || '';
+  ScrollTrigger.create({
+    trigger: el, start:'top 90%', once:true,
+    onEnter:()=>{
+      let obj={v:0};
+      gsap.to(obj,{v:target,duration:1.6,ease:'power2.out',onUpdate:()=>{
+        el.textContent = Math.floor(obj.v) + suffix;
+      }});
+    }
+  });
+});
+
+/* ========================================================
+   PORTFOLIO DATA + RENDER + FILTER
+======================================================== */
+/* ===== DATA LAYER (editable from Admin) ===== */
+const DEF = {
+  settings:{owner:'JIHAD HASSAN JUBAYER',heroSub:'AI Automation, Digital Marketing & Creative Solutions designed to help modern businesses grow faster.',email:'hello@novarc.agency',whatsapp:'+1 (415) 555-0192',waNumber:'14155550192',social:'@novarc.agency'},
+  projects:[
+    {name:'Aria Voice Concierge', cat:'AI Automation', desc:'24/7 AI voice agent handling bookings and support for a hospitality group.', c1:'#1fd0ff', c2:'#3ea3ff'},
+    {name:'Pulse Lead Engine', cat:'AI Automation', desc:'Automated lead capture and CRM routing that cut response time to seconds.', c1:'#3ea3ff', c2:'#9457ff'},
+    {name:'Northfield Growth Sprint', cat:'Marketing', desc:'Full-funnel paid social campaign that doubled qualified leads in 60 days.', c1:'#9457ff', c2:'#6b3bff'},
+    {name:'Arclight Brand Push', cat:'Marketing', desc:'Cross-platform content strategy that grew engaged audience by 3.4x.', c1:'#6b3bff', c2:'#1fd0ff'},
+    {name:'Loop Studio Catalog', cat:'Photo Editing', desc:'Product photo retouching and color system for a 400-SKU catalog.', c1:'#1fd0ff', c2:'#9457ff'},
+    {name:'Halo Skincare Reels', cat:'Video Editing', desc:'Short-form video series engineered for retention and scroll-stopping hooks.', c1:'#3ea3ff', c2:'#6b3bff'}
+  ],
+  process:{
+    title:'HOW WE WORK',
+    subtitle:'A tested five-step system we run for every client, from first call to ongoing optimization.',
+    steps:[
+      {num:'01',title:'DISCOVER',desc:'Understand the business, audience and goals.',on:true},
+      {num:'02',title:'STRATEGY',desc:'Build the right strategy and workflow.',on:true},
+      {num:'03',title:'CREATE',desc:'Design, develop and produce the required assets.',on:true},
+      {num:'04',title:'AUTOMATE',desc:'Connect AI tools and automate repetitive processes.',on:true},
+      {num:'05',title:'GROW',desc:'Optimize everything based on results and data.',on:true}
+    ]
+  },
+  testimonials:[
+    {name:'Maya Reyes',role:'Founder, Loop Studio',quote:'Novarc automated our entire lead intake process. What used to take three people now runs itself, and our response time dropped from hours to seconds.'},
+    {name:'Daniel Kim',role:'CMO, Arclight Goods',quote:'The rebrand and ad creatives they produced completely changed how our audience sees us. Engagement is up, and the team is a genuine pleasure to work with.'},
+    {name:'Sara Patel',role:'CEO, Northfield Supply',quote:'Within two months our cost per lead was cut in half. Their team treats our budget like it is their own money, which is rare to find in an agency.'}
+  ],
+  packages:[
+    {name:'Starter',price:'$250',features:'1 service focus\nStrategy call\nMonthly report\nEmail support',featured:false},
+    {name:'Growth',price:'$750',features:'Up to 2 services\nAI chatbot or ad campaign\nCreative assets included\nWeekly check-ins\nPriority support',featured:true},
+    {name:'Scale',price:'Custom',features:'All services\nFull automation setup\nDedicated team\n24/7 monitoring',featured:false}
+  ],
+  faqs:[
+    {q:'How long does a project take?',a:'Most automation and creative projects take 1 to 3 weeks. Ongoing marketing runs month to month.'},
+    {q:'Do you work with clients outside Bangladesh?',a:'Yes. We work with clients worldwide and communicate over WhatsApp, email and video calls.'},
+    {q:'What do I need to get started?',a:'Send us the project request form. We reply within one business day to set up a free discovery call.'},
+    {q:'Can I change my package later?',a:'Yes. You can upgrade or adjust scope at any time as your business grows.'}
+  ]
+};
+/*NOVARC_BAKED_PROJECTS_START*/
+const BAKED_PROJECTS=null;
+/*NOVARC_BAKED_PROJECTS_END*/
+if(Array.isArray(BAKED_PROJECTS)&&BAKED_PROJECTS.length) DEF.projects=BAKED_PROJECTS;
+const store = {
+  get(k,d){ try{ const v=localStorage.getItem('novarc_'+k); return v?JSON.parse(v):d; }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem('novarc_'+k,JSON.stringify(v)); return true; }catch(e){ return false; } }
+};
+const D = {};
+['settings','projects','process','testimonials','packages','faqs'].forEach(k=> D[k]=store.get(k,JSON.parse(JSON.stringify(DEF[k]))));
+if(!D.process || !Array.isArray(D.process.steps)) D.process=JSON.parse(JSON.stringify(DEF.process));
+const okImg = s => typeof s==='string' && /^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+\/=]+$/.test(s);
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* ========================================================
+   SHARED BACKEND (Supabase) — messages live in a cloud database,
+   NOT in this browser. Fill in the two values below (see setup steps).
+======================================================== */
+const BACKEND = {
+  url: 'https://xpoqcbnfeubgroauhdzy.supabase.co',
+  key: 'sb_publishable_jd7Ul-9qrIBIPDeRT4CLrA_Rz-il51k'
+};
+async function rpc(fn, args){
+  if(!BACKEND.url || !BACKEND.key) throw new Error('The message database is not set up yet (BACKEND.url / BACKEND.key are empty).');
+  const headers = {'Content-Type':'application/json', apikey: BACKEND.key, 'Content-Profile':'public', 'Accept-Profile':'public'};
+  if(/^eyJ/.test(BACKEND.key)) headers.Authorization = 'Bearer ' + BACKEND.key; // legacy JWT-style anon key
+  let res;
+  try{
+    res = await fetch(BACKEND.url.replace(/\/+$/,'') + '/rest/v1/rpc/' + fn, {method:'POST', headers, body: JSON.stringify(args||{})});
+  }catch(err){
+    throw new Error('Could not reach the message database (' + (err && err.message || err) + ').');
+  }
+  const text = await res.text(); let data = null;
+  try{ data = text ? JSON.parse(text) : null; }catch(_){ data = null; }
+  if(!res.ok){
+    const detail = data && (data.message || data.error_description || data.error || data.hint);
+    throw new Error(detail || ('The message database responded with ' + res.status + (res.statusText ? ' ' + res.statusText : '') + '.'));
+  }
+  return data;
+}
+const MSG = {list:[], state:'idle', err:''};
+const dbPw = () => sessionStorage.getItem('novarc_dbpw') || '';
+function refreshMsgView(){ if(isAuth() && (ADM.tab==='messages' || ADM.tab==='dashboard')) admRender(); }
+async function loadMsgs(){
+  if(!isAuth()) return;
+  MSG.state='loading'; MSG.err=''; refreshMsgView();
+  try{
+    const rows = await rpc('admin_list_messages', {p_pw: dbPw()});
+    MSG.list = (rows||[]).map(r=>({id:r.id, date:new Date(r.created_at).toLocaleString(), read:!!r.is_read, name:r.name||'', email:r.email||'', company:r.company||'', phone:r.phone||'', website:r.website||'', service:r.service||'', budget:r.budget||'', message:r.message||''}));
+    MSG.state='ok';
+  }catch(err){
+    MSG.list=[]; MSG.err=err.message;
+    MSG.state = /invalid admin password/i.test(err.message) ? 'locked' : 'error';
+  }
+  refreshMsgView();
+}
+
+let curFilter='all';
+const grid = document.getElementById('portfolioGrid');
+function renderProjects(filter){
+  curFilter = filter || curFilter;
+  grid.innerHTML='';
+  D.projects.filter(p=>curFilter==='all'||p.cat===curFilter).forEach(p=>{
+    const card = document.createElement('div');
+    card.className='project-card';
+    card.innerHTML = `
+      <div class="project-media">
+        <div class="grad-bg" style="background:linear-gradient(135deg, ${esc(p.c1)}33, ${esc(p.c2)}55), radial-gradient(circle at 30% 30%, ${esc(p.c1)}55, transparent 60%);"></div>
+        ${okImg(p.img)?`<img class="proj-img" src="${esc(p.img)}" alt="${esc(p.name)}" decoding="async">`:''}
+        <span class="cat-tag">${esc(p.cat)}</span>
+      </div>
+      <div class="project-body">
+        <h3>${esc(p.name)}</h3>
+        <p>${esc(p.desc)}</p>
+        <a class="view-link" href="#contact">Start something similar
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M7 7h10v10"/></svg>
+        </a>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+let procFirst=true;
+function renderProcess(){
+  const list=document.getElementById('processList'); if(!list) return;
+  const P=D.process;
+  document.getElementById('procTitle').textContent=P.title;
+  document.getElementById('procSub').textContent=P.subtitle;
+  list.innerHTML=P.steps.filter(x=>x.on!==false).map(x=>`
+    <div class="process-item${procFirst?' reveal':''}">
+      <div class="process-num">${esc(x.num)}</div>
+      <div><h3>${esc(x.title)}</h3><p>${esc(x.desc)}</p></div>
+      <div class="process-bar-wrap"><div class="process-bar"><span${procFirst?'':' style="width:100%"'}></span></div></div>
+    </div>`).join('');
+  if(procFirst){
+    procFirst=false;
+    list.querySelectorAll('.reveal').forEach(el=>{
+      gsap.to(el,{opacity:1,y:0,duration:0.9,ease:'power3.out',scrollTrigger:{trigger:el,start:'top 88%'}});
+    });
+    list.querySelectorAll('.process-bar span').forEach(bar=>{
+      gsap.to(bar,{width:'100%',duration:1.2,ease:'power2.out',scrollTrigger:{trigger:bar,start:'top 85%'}});
+    });
+    if(window.ScrollTrigger) ScrollTrigger.refresh();
+  } else if(window.ScrollTrigger) ScrollTrigger.refresh();
+}
+function renderTestimonials(){
+  document.getElementById('testiGrid').innerHTML = D.testimonials.map(t=>`
+    <div class="testi-card glass"><div class="testi-stars">★★★★★</div>
+    <p class="testi-quote">"${esc(t.quote)}"</p>
+    <div class="testi-person"><div class="testi-avatar">${esc(t.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase())}</div>
+    <div><div class="testi-name">${esc(t.name)}</div><div class="testi-role">${esc(t.role)}</div></div></div></div>`).join('');
+}
+function renderPackages(){
+  document.getElementById('pkgGrid').innerHTML = D.packages.map(p=>`
+    <div class="pkg-card glass${p.featured?' featured':''}">
+      ${p.featured?'<span class="pkg-badge">Most popular</span>':''}
+      <h3>${esc(p.name)}</h3><div class="pkg-price">${esc(p.price)}</div>
+      <ul>${String(p.features).split('\n').filter(x=>x.trim()).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+      <a href="#contact" class="btn ${p.featured?'btn-primary':'btn-ghost'}">Get ${esc(p.name)}</a>
+    </div>`).join('');
+}
+function renderFaq(){
+  document.getElementById('faqList').innerHTML = D.faqs.map(f=>`<details><summary>${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join('');
+}
+function applySettings(){
+  const s=D.settings, set=(id,t)=>{const el=document.getElementById(id); if(el) el.textContent=t;};
+  set('setOwner','OWNER : '+s.owner); set('setHeroSub',s.heroSub);
+  set('setEmail',s.email); set('setWa',s.whatsapp); set('setSocial',s.social);
+  document.getElementById('waFloat').href='https://wa.me/'+String(s.waNumber).replace(/\D/g,'');
+}
+function renderAll(){ renderProjects(); renderProcess(); renderTestimonials(); renderPackages(); renderFaq(); applySettings(); }
+renderAll();
+
+document.querySelectorAll('.filter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    renderProjects(btn.dataset.filter);
+  });
+});
+
+/* ========================================================
+   TILT ON SERVICE CARDS
+======================================================== */
+if(!isTouch){
+  document.querySelectorAll('.tilt-card').forEach(card=>{
+    card.addEventListener('mousemove', e=>{
+      const r = card.getBoundingClientRect();
+      const px = (e.clientX - r.left)/r.width - 0.5;
+      const py = (e.clientY - r.top)/r.height - 0.5;
+      gsap.to(card,{rotateY: px*8, rotateX: -py*8, translateY:-6, duration:0.5, ease:'power2.out', transformPerspective:800});
+    });
+    card.addEventListener('mouseleave', ()=>{
+      gsap.to(card,{rotateY:0, rotateX:0, translateY:0, duration:0.7, ease:'power3.out'});
+    });
+  });
+}
+
+/* ========================================================
+   CONTACT FORM VALIDATION + SAVE TO SHARED DATABASE
+======================================================== */
+const form = document.getElementById('contactForm');
+const formFields = document.getElementById('formFields');
+const formConfirm = document.getElementById('formConfirm');
+const formError = document.getElementById('formError');
+const submitBtn = form.querySelector('button[type="submit"]');
+let isSubmitting = false;
+let hasSubmitted = false;
+
+const validators = {
+  name: v => v.trim().length > 1,
+  email: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()),
+  company: v => v.trim().length > 1,
+  service: v => v.trim().length > 0,
+  message: v => v.trim().length >= 10,
+};
+
+function showFormError(msg){
+  formError.textContent = msg;
+  formError.classList.add('show');
+}
+
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  if (isSubmitting || hasSubmitted) return; // block duplicate submissions
+
+  formError.classList.remove('show');
+
+  let valid = true;
+  Object.keys(validators).forEach(key => {
+    const input = form.elements[key];
+    const wrap = document.getElementById('field-' + key);
+    const ok = validators[key](input.value);
+    wrap.classList.toggle('error', !ok);
+    if (!ok) valid = false;
+  });
+  if (!valid) return;
+
+  if (form.elements['bot-field'] && form.elements['bot-field'].value) {
+    showFormError('Submission failed: this request could not be accepted.');
+    return;
+  }
+
+  isSubmitting = true;
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Sending...';
+
+  try {
+    const f = Object.fromEntries(new FormData(form));
+    const savedId = await rpc('submit_message', {
+      p_name: (f.name||'').trim(), p_email: (f.email||'').trim(), p_company: (f.company||'').trim(),
+      p_phone: (f.phone||'').trim(), p_website: (f.website||'').trim(), p_service: f.service||'',
+      p_budget: f.budget||'', p_message: (f.message||'').trim()
+    });
+    if (savedId === null || savedId === undefined || typeof savedId === 'object') {
+      throw new Error('The database did not confirm that your message was saved.');
+    }
+
+    // Success: the database confirmed the row was saved
+    hasSubmitted = true;
+    formFields.style.display = 'none';
+    formConfirm.classList.add('show');
+    formConfirm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    formConfirm.focus({ preventScroll: true });
+    form.reset();
+  } catch (error) {
+    console.error('Form submission failed:', error);
+    showFormError('Submission failed: ' + (error && error.message ? error.message : String(error)));
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Send Project Request';
+  } finally {
+    isSubmitting = false;
+  }
+});
+
+Object.keys(validators).forEach(key => {
+  form.elements[key].addEventListener('input', () => {
+    document.getElementById('field-' + key).classList.remove('error');
+  });
+});
+
+/* ========================================================
+   HERO 3D SCENE — glowing AI core + particles
+======================================================== */
+(function heroScene(){
+  const canvas = document.getElementById('hero-canvas');
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  renderer.setPixelRatio(DPR);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, canvas.clientWidth/canvas.clientHeight, 0.1, 100);
+  camera.position.set(0,0, isMobile? 9: 7.5);
+
+  function resize(){
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    renderer.setSize(w,h,false);
+    camera.aspect = w/h; camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+
+  // core group
+  const core = new THREE.Group();
+  core.position.x = isMobile ? 0 : 2.1;
+  scene.add(core);
+
+  const icoGeo = new THREE.IcosahedronGeometry(1.5, 1);
+  const icoMat = new THREE.MeshBasicMaterial({color:0x3ea3ff, wireframe:true, transparent:true, opacity:0.55});
+  const ico = new THREE.Mesh(icoGeo, icoMat);
+  core.add(ico);
+
+  const ico2 = new THREE.Mesh(new THREE.IcosahedronGeometry(1.15, 0), new THREE.MeshBasicMaterial({color:0x9457ff, wireframe:true, transparent:true, opacity:0.4}));
+  core.add(ico2);
+
+  const glowGeo = new THREE.SphereGeometry(0.85, 32, 32);
+  const glowMat = new THREE.MeshBasicMaterial({color:0x1fd0ff, transparent:true, opacity:0.18});
+  const glow = new THREE.Mesh(glowGeo, glowMat);
+  core.add(glow);
+
+  const coreGeo = new THREE.SphereGeometry(0.32, 32, 32);
+  const coreMat = new THREE.MeshBasicMaterial({color:0xeaf6ff});
+  const coreSphere = new THREE.Mesh(coreGeo, coreMat);
+  core.add(coreSphere);
+
+  // orbit rings
+  for(let i=0;i<2;i++){
+    const ringGeo = new THREE.TorusGeometry(2.0 + i*0.4, 0.006, 8, 100);
+    const ringMat = new THREE.MeshBasicMaterial({color: i%2===0?0x3ea3ff:0x9457ff, transparent:true, opacity:0.35});
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = Math.PI/2.4 + i*0.5;
+    ring.rotation.y = i*0.8;
+    core.add(ring);
+  }
+
+  // particles field
+  const pGeo = new THREE.BufferGeometry();
+  const positions = new Float32Array(PARTICLE_COUNT*3);
+  for(let i=0;i<PARTICLE_COUNT;i++){
+    positions[i*3] = (Math.random()-0.5)*16;
+    positions[i*3+1] = (Math.random()-0.5)*10;
+    positions[i*3+2] = (Math.random()-0.5)*10 - 2;
+  }
+  pGeo.setAttribute('position', new THREE.BufferAttribute(positions,3));
+  const pMat = new THREE.PointsMaterial({color:0x8fd8ff, size:0.02, transparent:true, opacity:0.55});
+  const points = new THREE.Points(pGeo, pMat);
+  scene.add(points);
+
+  let targetRotX=0, targetRotY=0;
+  window.addEventListener('mousemove', e=>{
+    targetRotX = (e.clientY/window.innerHeight - 0.5) * 0.4;
+    targetRotY = (e.clientX/window.innerWidth - 0.5) * 0.6;
+  });
+
+  resize();
+  const clock = new THREE.Clock();
+  function animate(){
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+    ico.rotation.y = t*0.15; ico.rotation.x = t*0.08;
+    ico2.rotation.y = -t*0.2; ico2.rotation.x = t*0.1;
+    core.rotation.y += (targetRotY - core.rotation.y)*0.04;
+    core.rotation.x += (targetRotX - core.rotation.x)*0.04;
+    coreSphere.scale.setScalar(1 + Math.sin(t*2)*0.06);
+    glow.scale.setScalar(1 + Math.sin(t*1.4)*0.08);
+    points.rotation.y = t*0.02;
+    renderer.render(scene, camera);
+  }
+  if(!prefersReduced) animate(); else renderer.render(scene,camera);
+})();
+
+/* ========================================================
+   SERVICE MINI SCENES
+======================================================== */
+function makeMiniScene(canvas, type){
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  renderer.setPixelRatio(DPR);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 20);
+  camera.position.set(0,0,4.2);
+
+  const group = new THREE.Group();
+  scene.add(group);
+
+  if(type==='automation'){
+    const geo = new THREE.OctahedronGeometry(1, 0);
+    const mat = new THREE.MeshBasicMaterial({color:0x3ea3ff, wireframe:true});
+    group.add(new THREE.Mesh(geo, mat));
+    const inner = new THREE.Mesh(new THREE.SphereGeometry(0.35,16,16), new THREE.MeshBasicMaterial({color:0x1fd0ff}));
+    group.add(inner);
+    for(let i=0;i<3;i++){
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(1.35+i*0.18,0.004,8,64), new THREE.MeshBasicMaterial({color:0x3ea3ff, transparent:true, opacity:0.4}));
+      ring.rotation.x = Math.random()*Math.PI;
+      ring.rotation.y = Math.random()*Math.PI;
+      group.add(ring);
+    }
+  } else if(type==='marketing'){
+    const bars = [0.6,1.1,0.8,1.4,0.5];
+    bars.forEach((h,i)=>{
+      const geo = new THREE.BoxGeometry(0.22,h,0.22);
+      const mat = new THREE.MeshBasicMaterial({color: i%2? 0x9457ff:0x1fd0ff, transparent:true, opacity:0.85});
+      const bar = new THREE.Mesh(geo,mat);
+      bar.position.x = (i-2)*0.36; bar.position.y = h/2 - 0.6;
+      group.add(bar);
+    });
+    const grid = new THREE.GridHelper(2.4,6,0x3ea3ff,0x1a2233);
+    grid.position.y=-0.62;
+    group.add(grid);
+  } else {
+    const frame1 = new THREE.Mesh(new THREE.PlaneGeometry(1.3,0.85), new THREE.MeshBasicMaterial({color:0x1fd0ff, wireframe:true}));
+    frame1.position.set(-0.3,0.15,0.2);
+    const frame2 = new THREE.Mesh(new THREE.PlaneGeometry(1.1,0.7), new THREE.MeshBasicMaterial({color:0x9457ff, wireframe:true}));
+    frame2.position.set(0.35,-0.15,-0.1);
+    group.add(frame1, frame2);
+    const lens = new THREE.Mesh(new THREE.TorusGeometry(0.32,0.05,16,32), new THREE.MeshBasicMaterial({color:0xeaf6ff}));
+    group.add(lens);
+  }
+
+  function resize(){
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    renderer.setSize(w,h,false);
+    camera.aspect = w/h; camera.updateProjectionMatrix();
+  }
+  new ResizeObserver(resize).observe(canvas);
+  resize();
+
+  const clock = new THREE.Clock();
+  function animate(){
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+    group.rotation.y = t*0.4;
+    group.rotation.x = Math.sin(t*0.5)*0.15;
+    renderer.render(scene,camera);
+  }
+  if(!prefersReduced) animate(); else renderer.render(scene,camera);
+}
+document.querySelectorAll('.service-canvas').forEach(c=> makeMiniScene(c, c.dataset.scene));
+
+/* ========================================================
+   ABOUT SCENE — knot structure
+======================================================== */
+(function aboutScene(){
+  const canvas = document.getElementById('about-canvas');
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  renderer.setPixelRatio(DPR);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45,1,0.1,20);
+  camera.position.set(0,0,5);
+
+  const knot = new THREE.Mesh(
+    new THREE.TorusKnotGeometry(1.05, 0.32, 140, 16),
+    new THREE.MeshBasicMaterial({color:0x3ea3ff, wireframe:true, transparent:true, opacity:0.7})
+  );
+  scene.add(knot);
+  const knot2 = new THREE.Mesh(
+    new THREE.TorusKnotGeometry(1.05, 0.32, 140, 16),
+    new THREE.MeshBasicMaterial({color:0x9457ff, wireframe:true, transparent:true, opacity:0.25})
+  );
+  knot2.scale.setScalar(1.15);
+  scene.add(knot2);
+
+  function resize(){
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    renderer.setSize(w,h,false);
+    camera.aspect=w/h; camera.updateProjectionMatrix();
+  }
+  new ResizeObserver(resize).observe(canvas);
+  resize();
+
+  let targetY=0;
+  window.addEventListener('mousemove', e=>{ targetY = (e.clientX/window.innerWidth - 0.5); });
+
+  const clock = new THREE.Clock();
+  function animate(){
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+    knot.rotation.x = t*0.18; knot.rotation.y += (targetY*0.6 + t*0.12 - knot.rotation.y)*0.02;
+    knot2.rotation.x = -t*0.1; knot2.rotation.y = t*0.08;
+    renderer.render(scene,camera);
+  }
+  if(!prefersReduced) animate(); else renderer.render(scene,camera);
+})();
+
+/* ========================================================
+   FINAL CTA SCENE — glowing sphere backdrop
+======================================================== */
+(function ctaScene(){
+  const canvas = document.getElementById('cta-canvas');
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  renderer.setPixelRatio(DPR);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50,1,0.1,20);
+  camera.position.set(0,0,6);
+
+  const geo = new THREE.IcosahedronGeometry(2.3, 2);
+  const mat = new THREE.MeshBasicMaterial({color:0x3ea3ff, wireframe:true, transparent:true, opacity:0.18});
+  const mesh = new THREE.Mesh(geo, mat);
+  scene.add(mesh);
+  const glow = new THREE.Mesh(new THREE.SphereGeometry(1.5,32,32), new THREE.MeshBasicMaterial({color:0x9457ff, transparent:true, opacity:0.07}));
+  scene.add(glow);
+
+  function resize(){
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    renderer.setSize(w,h,false);
+    camera.aspect=w/h; camera.updateProjectionMatrix();
+  }
+  new ResizeObserver(resize).observe(canvas);
+  resize();
+
+  const clock = new THREE.Clock();
+  function animate(){
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+    mesh.rotation.y = t*0.06; mesh.rotation.x = t*0.04;
+    glow.scale.setScalar(1+Math.sin(t)*0.1);
+    renderer.render(scene,camera);
+  }
+  if(!prefersReduced) animate(); else renderer.render(scene,camera);
+})();
+
+/* ========================================================
+   NAV: mobile menu + scroll progress
+======================================================== */
+const burger=document.getElementById('burger'), links=document.querySelector('.nav-links');
+burger.addEventListener('click',()=>links.classList.toggle('open'));
+links.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>links.classList.remove('open')));
+window.addEventListener('scroll',()=>{
+  const max=document.documentElement.scrollHeight-innerHeight;
+  document.getElementById('progress').style.width=(max>0?scrollY/max*100:0)+'%';
+},{passive:true});
+
+/* ========================================================
+   ADMIN PANEL  (open with /#admin or the footer link)
+   Note: runs in the browser; data is stored in localStorage.
+======================================================== */
+const adm=document.getElementById('admin'), admMain=document.getElementById('admMain');
+const ADM={tab:'dashboard',edit:null};
+const CATS=['AI Automation','Marketing','Photo Editing','Video Editing'];
+const SCH={
+  projects:{title:'Projects',label:'name',sub:'cat',fields:[['name','Title'],['cat','Category','select',CATS],['desc','Description','textarea'],['c1','Color 1','color'],['c2','Color 2','color']],blank:{name:'',cat:CATS[0],desc:'',c1:'#3ea3ff',c2:'#9457ff'}},
+  testimonials:{title:'Testimonials',label:'name',sub:'role',fields:[['name','Client name'],['role','Role, company'],['quote','Quote','textarea']],blank:{name:'',role:'',quote:''}},
+  packages:{title:'Packages',label:'name',sub:'price',fields:[['name','Package name'],['price','Price (e.g. $250)'],['features','Features (one per line)','textarea'],['featured','Mark as most popular','checkbox']],blank:{name:'',price:'',features:'',featured:false}},
+  faqs:{title:'FAQ',label:'q',sub:'a',fields:[['q','Question'],['a','Answer','textarea']],blank:{q:'',a:''}}
+};
+const hashPw=s=>{let x=5381;const t='novarc::'+s;for(let i=0;i<t.length;i++)x=((x<<5)+x+t.charCodeAt(i))|0;return String(x);};
+const getPw=()=>store.get('pw',hashPw('1234567'));
+const authToken=()=>hashPw('session::'+getPw());
+const isAuth=()=>sessionStorage.getItem('novarc_auth')===authToken();
+function toast(t){const e=document.createElement('div');e.className='adm-toast';e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),2200);}
+function admShow(){
+  adm.hidden=false; document.body.style.overflow='hidden';
+  const ok=isAuth();
+  document.getElementById('admLogin').hidden=ok; document.getElementById('admApp').hidden=!ok;
+  if(ok){ admRender(); loadMsgs(); } else document.getElementById('admPw').focus();
+}
+function admHide(){adm.hidden=true;admMain.innerHTML='';document.body.style.overflow='';history.replaceState(null,'',location.pathname+location.search);}
+function route(){ if(location.hash==='#admin') admShow(); }
+window.addEventListener('hashchange',route); route();
+document.getElementById('admGo').onclick=()=>{
+  if(hashPw(document.getElementById('admPw').value)===getPw()){sessionStorage.setItem('novarc_auth',authToken());sessionStorage.setItem('novarc_dbpw',document.getElementById('admPw').value);document.getElementById('admPw').value='';document.getElementById('admErr').style.display='none';admShow();}
+  else document.getElementById('admErr').style.display='block';
+};
+document.getElementById('admPw').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('admGo').click();});
+document.getElementById('admBack').onclick=admHide; document.getElementById('admView').onclick=admHide;
+document.getElementById('admOut').onclick=()=>{sessionStorage.removeItem('novarc_auth');sessionStorage.removeItem('novarc_dbpw');MSG.list=[];MSG.state='idle';admHide();};
+document.getElementById('admNav').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(!b)return;ADM.tab=b.dataset.tab;ADM.edit=null;admRender();if(ADM.tab==='messages')loadMsgs();});
+
+function fieldHtml(f,v){
+  const [k,l,t,o]=f, id='f_'+k;
+  if(t==='textarea') return `<div class="field"><label for="${id}">${l}</label><textarea id="${id}" name="${k}">${esc(v)}</textarea></div>`;
+  if(t==='select') return `<div class="field"><label for="${id}">${l}</label><select id="${id}" name="${k}">${o.map(x=>`<option ${x===v?'selected':''}>${esc(x)}</option>`).join('')}</select></div>`;
+  if(t==='color') return `<div class="field"><label for="${id}">${l}</label><input type="color" id="${id}" name="${k}" value="${esc(v)}"></div>`;
+  if(t==='checkbox') return `<div class="field"><label><input type="checkbox" name="${k}" ${v?'checked':''}> ${l}</label></div>`;
+  return `<div class="field"><label for="${id}">${l}</label><input type="text" id="${id}" name="${k}" value="${esc(v)}"></div>`;
+}
+function admRender(){
+  if(!isAuth()){admMain.innerHTML='';return;}
+  document.querySelectorAll('#admNav [data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===ADM.tab));
+  const t=ADM.tab, msgs=MSG.list;
+  if(t==='dashboard'){
+    admMain.innerHTML=`<h2>Dashboard</h2><p class="sub">A quick look at your site content.</p>
+    <div class="adm-cards">
+      <div class="adm-card glass"><b>${MSG.state==='ok'?msgs.filter(m=>!m.read).length:'–'}</b><span>New messages</span></div>
+      <div class="adm-card glass"><b>${D.projects.length}</b><span>Projects</span></div>
+      <div class="adm-card glass"><b>${D.testimonials.length}</b><span>Testimonials</span></div>
+      <div class="adm-card glass"><b>${D.packages.length}</b><span>Packages</span></div></div>
+    <div class="adm-note">Changes you make here are saved in this browser and appear on the site right away. Messages from visitors on any device are stored in your shared database and appear under Messages. To move your edits to another device, use Backup &amp; password → Export.</div>`;
+  } else if(t==='messages'){
+    const head=`<h2>Messages</h2><p class="sub">Requests sent through the contact form from visitors on any device.</p>`;
+    if(MSG.state==='loading'||MSG.state==='idle'){
+      admMain.innerHTML=head+`<div class="adm-note">Loading messages…</div>`;
+    } else if(MSG.state==='locked'){
+      admMain.innerHTML=head+`<form class="adm-form glass" id="msgUnlock" style="margin-top:0"><h3>Messages password</h3><p class="sub" style="margin-bottom:14px">The database rejected the password. Enter the Messages password you set in the database setup.</p><div class="field"><label for="msgPw">Messages password</label><input type="password" id="msgPw" name="msgPw" autocomplete="current-password"></div><div class="adm-actions"><button type="submit" class="adm-btn pri">Unlock messages</button></div></form>`;
+    } else if(MSG.state==='error'){
+      admMain.innerHTML=head+`<div class="adm-note" style="color:#ff8fa3;border-color:rgba(255,92,122,.35);background:rgba(255,92,122,.08)">Could not load messages: ${esc(MSG.err)}</div><div class="adm-actions"><button class="adm-btn" data-act="reloadmsgs">Try again</button></div>`;
+    } else {
+      admMain.innerHTML=head+`
+    <div class="adm-actions" style="margin-bottom:18px"><button class="adm-btn" data-act="reloadmsgs">Refresh</button><button class="adm-btn" data-act="csv">Export CSV</button><button class="adm-btn del" data-act="clearmsgs">Delete all</button></div>
+    ${msgs.length?msgs.map((m,i)=>`<div class="adm-msg glass ${m.read?'':'new'}"><b>${esc(m.name)}</b> <small>· ${esc(m.email)} · ${esc(m.company)} · ${esc(m.date)}</small><br><small>${esc(m.service)} · ${esc(m.budget||'No budget given')} · ${esc(m.phone)} ${esc(m.website)}</small>
+      <p>${esc(m.message)}</p><div class="adm-actions"><button class="adm-btn" data-act="read" data-i="${i}">${m.read?'Mark as new':'Mark as read'}</button><button class="adm-btn del" data-act="delmsg" data-i="${i}">Delete</button></div></div>`).join(''):'<div class="adm-note">No messages yet. Submit the contact form to test it.</div>'}`;
+    }
+  } else if(SCH[t]){
+    const s=SCH[t], list=D[t], e=ADM.edit, cur=e===null?null:(e==='new'?s.blank:list[e]);
+    admMain.innerHTML=`<h2>${s.title}</h2><p class="sub">${list.length} item${list.length===1?'':'s'}. Edit, delete or add new ones.${t==='projects'?' Use the arrows to reorder; the order is the order shown on the website.':''}</p>${t==='projects'?'<div class="adm-note"><b>Upload image</b> on any project below (or inside its Edit form). The image shows on the public portfolio immediately and is saved in this browser. To show it to visitors on every device, use <b>Publish to all visitors</b> at the bottom of this page.</div>':''}
+    ${list.map((it,i)=>`<div class="adm-row${t==='projects'?' wrap':''}">${t==='projects'?`<div class="adm-thumb" ${okImg(it.img)?`style="background-image:url('${esc(it.img)}')"`:''}></div>`:''}<div class="t"><b>${esc(it[s.label])}</b><small>${esc(it[s.sub])}${t==='projects'?(it.img?' · image uploaded':' · no image (gradient shown)'):''}</small></div>${t==='projects'?`<button type="button" class="adm-btn pri" data-act="img" data-i="${i}">${it.img?'Replace image':'Upload image'}</button>${it.img?`<button type="button" class="adm-btn del" data-act="imgdel" data-i="${i}">Remove image</button>`:''}`:''}${t==='projects'?`<button class="adm-btn" data-act="up" data-i="${i}" title="Move up" ${i===0?'disabled':''}>↑</button><button class="adm-btn" data-act="down" data-i="${i}" title="Move down" ${i===list.length-1?'disabled':''}>↓</button>`:''}<button class="adm-btn" data-act="edit" data-i="${i}">Edit</button><button class="adm-btn del" data-act="del" data-i="${i}">Delete</button></div>`).join('')}
+    <div class="adm-actions"><button class="adm-btn pri" data-act="new">Add new</button></div>
+    ${cur?`<form class="adm-form glass" id="admForm"><h3>${e==='new'?'Add new':'Edit'} item</h3>${s.fields.map(f=>fieldHtml(f,cur[f[0]])).join('')}${t==='projects'&&e!=='new'?`<div class="field"><label>Project image</label><div class="adm-row" style="margin-bottom:0"><div class="adm-thumb" ${okImg(cur.img)?`style="background-image:url('${esc(cur.img)}')"`:''}></div><div class="t"><small>${cur.img?'Image uploaded':'No image yet.'}</small></div><button type="button" class="adm-btn pri" data-act="img" data-i="${e}">${cur.img?'Replace image':'Upload image'}</button>${cur.img?`<button type="button" class="adm-btn del" data-act="imgdel" data-i="${e}">Remove image</button>`:''}</div></div>`:''}<div class="adm-actions"><button type="submit" class="adm-btn pri">Save changes</button><button type="button" class="adm-btn" data-act="cancel">Cancel</button></div></form>`:''}
+    ${t==='projects'?`<div class="adm-form glass"><h3>Publish to all visitors</h3><p class="sub" style="margin-bottom:16px">Images you upload are stored in this browser. To make them visible to everyone, download the publish-ready site file and upload it to your host in place of the current index.html. Only someone who can upload that file can change what visitors see.</p><div class="adm-actions"><button type="button" class="adm-btn pri" data-act="publish">Download publish-ready index.html</button><button type="button" class="adm-btn" data-act="publishpick">Opened from my computer? Choose index.html</button></div></div>`:''}`;
+  } else if(t==='process'){
+    const P=D.process, e=ADM.edit, st=P.steps;
+    const cur=e===null?null:(e==='new'?{num:String(st.length+1).padStart(2,'0'),title:'',desc:'',on:true}:st[e]);
+    admMain.innerHTML=`<h2>How We Work</h2><p class="sub">Edit the section heading and the process steps. Changes appear on the website right away.</p>
+    <form class="adm-form glass" id="procHead" style="margin-top:0"><h3>Section heading</h3>
+      <div class="field"><label for="ph_title">Section heading</label><input type="text" id="ph_title" name="title" value="${esc(P.title)}"></div>
+      <div class="field"><label for="ph_sub">Section subtitle</label><textarea id="ph_sub" name="subtitle">${esc(P.subtitle)}</textarea></div>
+      <div class="adm-actions"><button type="submit" class="adm-btn pri">Save heading</button></div></form>
+    <h3 style="margin:30px 0 14px;font-size:18px">Steps (${st.length}, ${st.filter(x=>x.on!==false).length} visible)</h3>
+    ${st.map((x,i)=>`<div class="adm-row" style="${x.on===false?'opacity:.55':''}"><div class="t"><b>${esc(x.num)} · ${esc(x.title)}${x.on===false?' (hidden)':''}</b><small>${esc(x.desc)}</small></div>
+      <button class="adm-btn" data-act="pup" data-i="${i}" title="Move up" ${i===0?'disabled':''}>↑</button>
+      <button class="adm-btn" data-act="pdown" data-i="${i}" title="Move down" ${i===st.length-1?'disabled':''}>↓</button>
+      <button class="adm-btn" data-act="ptoggle" data-i="${i}">${x.on===false?'Enable':'Disable'}</button>
+      <button class="adm-btn" data-act="pedit" data-i="${i}">Edit</button>
+      <button class="adm-btn del" data-act="pdel" data-i="${i}">Delete</button></div>`).join('')||'<div class="adm-note">No steps yet. Add one below.</div>'}
+    <div class="adm-actions"><button class="adm-btn pri" data-act="pnew">Add step</button><button class="adm-btn" data-act="prenum">Renumber 01, 02, 03…</button><button class="adm-btn del" data-act="preset">Restore default steps</button></div>
+    ${cur?`<form class="adm-form glass" id="procForm"><h3>${e==='new'?'Add step':'Edit step'}</h3>
+      <div class="field"><label for="ps_num">Step number</label><input type="text" id="ps_num" name="num" value="${esc(cur.num)}"></div>
+      <div class="field"><label for="ps_title">Title</label><input type="text" id="ps_title" name="title" value="${esc(cur.title)}"></div>
+      <div class="field"><label for="ps_desc">Description</label><textarea id="ps_desc" name="desc">${esc(cur.desc)}</textarea></div>
+      <div class="field"><label><input type="checkbox" name="on" ${cur.on!==false?'checked':''}> Show this step on the website</label></div>
+      <div class="adm-actions"><button type="submit" class="adm-btn pri">Save step</button><button type="button" class="adm-btn" data-act="cancel">Cancel</button></div></form>`:''}`;
+  } else if(t==='settings'){
+    const s=D.settings, F=[['owner','Owner name'],['heroSub','Hero subtitle','textarea'],['email','Contact email'],['whatsapp','WhatsApp (display)'],['waNumber','WhatsApp number for chat button (digits only, with country code)'],['social','Social handle']];
+    admMain.innerHTML=`<h2>Site settings</h2><p class="sub">Text shown in the hero, contact section and WhatsApp button.</p><form class="adm-form glass" id="admForm" style="margin-top:0">${F.map(f=>fieldHtml(f,s[f[0]])).join('')}<div class="adm-actions"><button type="submit" class="adm-btn pri">Save settings</button></div></form>`;
+  } else {
+    admMain.innerHTML=`<h2>Backup &amp; password</h2><p class="sub">Keep a copy of your content, or change the admin password.</p>
+    <div class="adm-note">The default password is <b>1234567</b>. Change it now. This login only hides the panel in the browser; it is not server-level security.</div>
+    <form class="adm-form glass" id="pwForm" style="margin-top:0"><h3>Change password</h3><div class="field"><label>New password (min. 6 characters)</label><input type="password" name="pw" autocomplete="new-password"></div><div class="adm-actions"><button type="submit" class="adm-btn pri">Update password</button></div></form>
+    <div class="adm-form glass"><h3>Backup</h3><div class="adm-actions"><button class="adm-btn" data-act="export">Export JSON</button><button class="adm-btn" data-act="import">Import JSON</button><button class="adm-btn del" data-act="reset">Reset to defaults</button></div><input type="file" id="impFile" accept="application/json" hidden></div>`;
+  }
+}
+function compressImage(file){
+  return new Promise((res,rej)=>{
+    const fr=new FileReader();
+    fr.onerror=()=>rej(new Error('Could not read the file'));
+    fr.onload=()=>{
+      const im=new Image();
+      im.onerror=()=>rej(new Error('That file is not a valid image'));
+      im.onload=()=>{
+        const MAX=1200, r=Math.min(1,MAX/Math.max(im.width,im.height));
+        const w=Math.max(1,Math.round(im.width*r)), h=Math.max(1,Math.round(im.height*r));
+        const c=document.createElement('canvas'); c.width=w; c.height=h;
+        const x=c.getContext('2d'); x.fillStyle='#0b0f1a'; x.fillRect(0,0,w,h); x.drawImage(im,0,0,w,h);
+        res(c.toDataURL('image/jpeg',0.8));
+      };
+      im.src=fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+const keepForm=()=>{const f=document.getElementById('admForm');return f?[...new FormData(f)]:null;};
+const restoreForm=k=>{const f=document.getElementById('admForm');if(!f||!k)return;k.forEach(([n,v])=>{const el=f.elements[n];if(el&&typeof v==='string')el.value=v;});};
+function pickImage(i){
+  if(!isAuth()){toast('Please log in as admin');return;}
+  const inp=document.createElement('input');
+  inp.type='file'; inp.accept='image/png,image/jpeg,image/webp,image/gif'; inp.style.display='none';
+  const done=()=>inp.remove();
+  inp.addEventListener('change',()=>{const f=inp.files&&inp.files[0];done();if(f)handleImage(f,i);});
+  inp.addEventListener('cancel',done);
+  document.body.appendChild(inp); inp.click();
+}
+async function handleImage(file,i){
+  if(!isAuth()){toast('Please log in as admin');return;}
+  const proj=D.projects[i]; if(!proj) return;
+  if(!/^image\/(png|jpeg|webp|gif)$/.test(file.type)){toast('Use a PNG, JPG, WebP or GIF image');return;}
+  if(file.size>15*1024*1024){toast('Image is too large (max 15 MB)');return;}
+  try{
+    const data=await compressImage(file), old=proj.img, keep=keepForm();
+    proj.img=data;
+    if(!store.set('projects',D.projects)){
+      if(old) proj.img=old; else delete proj.img;
+      toast('Browser storage is full. Try a smaller image or remove another image.');
+      return;
+    }
+    renderAll(); admRender(); restoreForm(keep); toast(old?'Image replaced':'Image saved');
+  }catch(err){toast(err.message||'Upload failed');}
+}
+window.addEventListener('storage',e=>{
+  if(e.key==='novarc_projects'){D.projects=store.get('projects',D.projects);renderProjects();}
+});
+const BK_A='/*NOVARC_BAKED_PROJECTS_'+'START*/', BK_B='/*NOVARC_BAKED_PROJECTS_'+'END*/';
+function bakeProjects(text){
+  const a=text.indexOf(BK_A), b=text.indexOf(BK_B);
+  if(a<0||b<a) throw new Error('That is not the updated NOVARC site file');
+  const data=JSON.stringify(D.projects.map(p=>({...p,img:okImg(p.img)?p.img:undefined}))).replace(/</g,'\\u003c');
+  return text.slice(0,a+BK_A.length)+'\nconst BAKED_PROJECTS='+data+';\n'+text.slice(b);
+}
+function publishWith(text){
+  if(!isAuth()) return;
+  try{download('index.html',bakeProjects(text),'text/html');toast('Downloaded. Upload this index.html to your host to publish.');}
+  catch(err){toast(err.message);}
+}
+async function liveSource(){
+  try{const r=await fetch(location.href.split('#')[0],{cache:'no-store'});if(!r.ok)return null;const t=await r.text();return t.indexOf(BK_A)>=0?t:null;}
+  catch(e){return null;}
+}
+function persist(k){if(!store.set(k,D[k]))toast('Could not save: browser storage is full or disabled');renderAll();}
+function download(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500);}
+admMain.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]'); if(!b) return;
+  const act=b.dataset.act, i=+b.dataset.i, t=ADM.tab;
+  if(act==='new'){ADM.edit='new';admRender();}
+  else if(act==='edit'){ADM.edit=i;admRender();}
+  else if(act==='cancel'){ADM.edit=null;admRender();}
+  else if(act==='img'){pickImage(i);}
+  else if(act==='publish'){if(!isAuth())return;liveSource().then(s=>{if(s)publishWith(s);else toast('Cannot read the live file here. Use "Choose index.html" instead.');});}
+  else if(act==='publishpick'){if(!isAuth())return;const p=document.createElement('input');p.type='file';p.accept='.html,text/html';p.style.display='none';p.addEventListener('change',()=>{const f=p.files&&p.files[0];p.remove();if(f)f.text().then(publishWith);});p.addEventListener('cancel',()=>p.remove());document.body.appendChild(p);p.click();}
+  else if(act==='imgdel'){if(!isAuth())return;if(confirm('Remove this image and show the gradient again?')){const keep=keepForm();delete D.projects[i].img;persist('projects');admRender();restoreForm(keep);toast('Image removed');}}
+  else if(act==='up'||act==='down'){const L=D[t],j=act==='up'?i-1:i+1;if(j>=0&&j<L.length){[L[i],L[j]]=[L[j],L[i]];ADM.edit=null;persist(t);admRender();toast('Order updated');}}
+  else if(act==='pnew'){ADM.edit='new';admRender();}
+  else if(act==='pedit'){ADM.edit=i;admRender();}
+  else if(act==='pup'||act==='pdown'){const L=D.process.steps,j=act==='pup'?i-1:i+1;if(j>=0&&j<L.length){[L[i],L[j]]=[L[j],L[i]];ADM.edit=null;persist('process');admRender();toast('Order updated');}}
+  else if(act==='ptoggle'){const x=D.process.steps[i];x.on=(x.on===false);persist('process');admRender();toast(x.on?'Step enabled':'Step disabled');}
+  else if(act==='pdel'){if(confirm('Delete this step?')){D.process.steps.splice(i,1);ADM.edit=null;persist('process');admRender();toast('Deleted');}}
+  else if(act==='prenum'){D.process.steps.forEach((x,k)=>{x.num=String(k+1).padStart(2,'0');});persist('process');admRender();toast('Renumbered');}
+  else if(act==='preset'){if(confirm('Restore the original five steps and heading?')){D.process=JSON.parse(JSON.stringify(DEF.process));ADM.edit=null;persist('process');admRender();toast('Defaults restored');}}
+  else if(act==='del'){if(confirm('Delete this item?')){D[t].splice(i,1);persist(t);admRender();toast('Deleted');}}
+  else if(act==='reloadmsgs'){loadMsgs();}
+  else if(act==='read'||act==='delmsg'){
+    const m=MSG.list[i]; if(!m) return;
+    const call = act==='read' ? rpc('admin_set_read',{p_pw:dbPw(),p_id:m.id,p_read:!m.read}) : rpc('admin_delete_message',{p_pw:dbPw(),p_id:m.id});
+    call.then(()=>loadMsgs()).catch(err=>toast('Failed: '+err.message));
+  }
+  else if(act==='clearmsgs'){if(confirm('Delete all messages for everyone? This cannot be undone.')){rpc('admin_delete_all_messages',{p_pw:dbPw()}).then(()=>loadMsgs()).catch(err=>toast('Failed: '+err.message));}}
+  else if(act==='csv'){const m=MSG.list,K=['date','name','email','company','phone','website','service','budget','message'];download('messages.csv',[K.join(',')].concat(m.map(r=>K.map(k=>'"'+String(r[k]).replace(/"/g,'""')+'"').join(','))).join('\n'),'text/csv');}
+  else if(act==='export'){download('novarc-backup.json',JSON.stringify(D,null,2),'application/json');}
+  else if(act==='import'){document.getElementById('impFile').click();}
+  else if(act==='reset'){if(confirm('Reset all content to defaults?')){Object.keys(D).forEach(k=>{D[k]=JSON.parse(JSON.stringify(DEF[k]));store.set(k,D[k]);});renderAll();toast('Reset done');}}
+});
+admMain.addEventListener('change',e=>{
+  if(e.target.id!=='impFile'||!e.target.files[0]) return;
+  e.target.files[0].text().then(txt=>{try{const o=JSON.parse(txt);Object.keys(DEF).forEach(k=>{if(o[k]&&(k!=='process'||Array.isArray(o[k].steps))){D[k]=o[k];store.set(k,o[k]);}});renderAll();admRender();toast('Backup imported');}catch(err){toast('Invalid backup file');}});
+});
+admMain.addEventListener('submit',e=>{
+  e.preventDefault();
+  const fd=new FormData(e.target), t=ADM.tab;
+  if(e.target.id==='msgUnlock'){sessionStorage.setItem('novarc_dbpw',String(fd.get('msgPw')||''));loadMsgs();return;}
+  if(e.target.id==='pwForm'){const pw=fd.get('pw');if(pw.length<6){toast('Use at least 6 characters');return;}store.set('pw',hashPw(pw));sessionStorage.setItem('novarc_auth',authToken());e.target.reset();toast('Password updated (Messages password is set in the database)');return;}
+  if(e.target.id==='procHead'){D.process.title=(fd.get('title')||'').trim()||DEF.process.title;D.process.subtitle=(fd.get('subtitle')||'').trim();persist('process');admRender();toast('Heading saved');return;}
+  if(e.target.id==='procForm'){
+    const o={num:(fd.get('num')||'').trim(),title:(fd.get('title')||'').trim(),desc:(fd.get('desc')||'').trim(),on:fd.has('on')};
+    if(!o.title){toast('Please enter a title');return;}
+    if(ADM.edit==='new') D.process.steps.push(o); else D.process.steps[ADM.edit]=o;
+    ADM.edit=null;persist('process');admRender();toast('Step saved');return;
+  }
+  if(t==='settings'){D.settings=Object.fromEntries(fd);persist('settings');toast('Settings saved');return;}
+  const s=SCH[t], o={};
+  s.fields.forEach(f=>{o[f[0]]=f[2]==='checkbox'?fd.has(f[0]):(fd.get(f[0])||'').trim();});
+  if(!o[s.label]){toast('Please fill in the first field');return;}
+  if(t==='projects'&&ADM.edit!=='new'&&D[t][ADM.edit]&&D[t][ADM.edit].img) o.img=D[t][ADM.edit].img;
+  if(ADM.edit==='new') D[t].push(o); else D[t][ADM.edit]=o;
+  ADM.edit=null; persist(t); admRender(); toast('Saved');
+});
+</script>
+</body>
+</html>
